@@ -166,7 +166,7 @@ void SMTLIBInput::parseInput()
 		int seqIndex=0; //sequence index
 		string arrayName;
 		int index=0;
-		while(t != T_EXIT)
+		while(t != T_EXIT && t != T_EOF)
 		{
 			//Check we received expected token
 			if(t != SMTLIBInput::gvSequence[seqIndex])
