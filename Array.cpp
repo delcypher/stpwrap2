@@ -15,7 +15,7 @@ void Array::addIndex(int index)
 }
 
 
-bool Array::setByte(int index, char value)
+bool Array::setByte(int index, unsigned char value)
 {
 	if(index > rawBytes.size())
 		return false;
@@ -24,7 +24,7 @@ bool Array::setByte(int index, char value)
 	return true;
 }
 
-char Array::getByte(int index)
+unsigned char Array::getByte(int index)
 {
 	if( index > rawBytes.size())
 		cerr << "Array::getByte() : Invalid index!" << endl;

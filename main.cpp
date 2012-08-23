@@ -492,7 +492,7 @@ void SMTLIBOutput::parseOutput()
 						if(solutions.count(arrayName) == 1)
 						{
 							solutions[arrayName]->valueBitWidth=width;
-							solutions[arrayName]->setByte(index, static_cast<char>(value));
+							solutions[arrayName]->setByte(index, static_cast<unsigned char>(value));
 							//cerr << "Setting: " << arrayName << "[" << index << "] = " << value << endl;
 						}
 					break;
