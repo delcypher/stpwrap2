@@ -16,7 +16,7 @@ using namespace SMTLIBOutput;
 %}
 
 /* Array identifier regex */
-ARRAY_ID	[A-Za-z][A-Za-z0-9_.-]+
+ARRAY_ID	[A-Za-z][A-Za-z0-9_.-]*
 HEXD		[a-fA-F0-9]
 
 /* (av) array value condition */

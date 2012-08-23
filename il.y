@@ -16,7 +16,7 @@ using namespace SMTLIBInput;
 %}
 
 /* Array identifier regex */
-ARRAY_ID	[A-Za-z][A-Za-z0-9_.-]+
+ARRAY_ID	[A-Za-z][A-Za-z0-9_.-]*
 
 /* (gv) get-value condition, (bv) bitvector condition */
 %x gv bv
