@@ -447,11 +447,23 @@ void SMTLIBOutput::parseOutput()
 	{
 		//We don't need to get array values
 
-		//flex should send these to stdout so we don't need to.
-		if(t!= T_SAT && t!= T_UNSAT && t!= T_UNKNOWN)
+		/* Because we told STP we want a counter example. We'll
+		 * still see the arrays values. We'll just skip past them
+		 * until we see what we want.
+		 */
+
+		while(t!= T_SAT && t!= T_UNSAT && t!= T_UNKNOWN)
 		{
-			cerr << "Error: STP did not respond with sat|unsat|unknown." << endl;
+			t=static_cast<OutputToken>(ollex());//grab next token
+			if(t==T_EOF)
+			{
+				cerr << "Error: STP did not respond with sat|unsat|unknown." << endl;
+			}
 		}
+
+		/* When we hit T_SAT | T_UNSAT | T_UNKNOWN token they'll be sent to
+		 * stdout by flex so we don't need to do anything else.
+		 */
 	}
 	else
 	{
