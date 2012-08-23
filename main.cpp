@@ -108,12 +108,14 @@ int cpfd[2];
 void parseArgs(int argc, char* argv[]);
 void setupPipes();
 
-
+pid_t pid;
 
 
 void printSMTLIBResponce();
 
 void runSTP();
+
+void waitForSTP();
 
 void exitUnknown();
 
@@ -123,9 +125,11 @@ int main(int argc, char* argv[])
 
 	setupPipes();
 
+	runSTP();
+
 	SMTLIBInput::parseInput();
 
-	runSTP();
+	waitForSTP();
 
 	SMTLIBOutput::parseOutput();
 
@@ -319,7 +323,7 @@ void runSTP()
 {
 	fflush(stdout);
 	fflush(stdin);
-	pid_t pid = fork();
+	pid = fork();
 
 	if(pid==-1)
 	{
@@ -332,10 +336,14 @@ void runSTP()
 	{
 		//child
 
-
-		/* pcfd[1] (write end) (a.k.a ilout) does not need closing as it has
-		 * already been closed before fork
+		/* Close write end of parent->child.
+		 * EOF will never be sent if we forget to do this!
 		 */
+		if(close(pcfd[1]) == -1)
+		{
+			perror("close (child):");
+			exit(1);
+		}
 
 
 		//close read end of child->parent
@@ -365,33 +373,24 @@ void runSTP()
 		}
 
 		//execute STP
-		if(solutions.size()== 0)
+
+
+		/* We always ask for a counter example. We do this because
+		 * we don't know yet if we need to ask for values because
+		 * the input SMTLIBv2 file has not been parsed.
+		 */
+		if(execlp(STP,STP,"--SMTLIB2", "-p", (char*) NULL)== -1)
 		{
-			//we don't need to ask for a counter example
-			if(execlp(STP,STP,"--SMTLIB2", (char*) NULL)== -1)
-			{
-				cerr << "Failed to execute STP (" << STP << ")" << endl;
-				perror("execlp:");
-				exit(1);
-			}
+			cerr << "Failed to execute STP (" << STP << ")" << endl;
+			perror("execlp:");
+			exit(1);
 		}
-		else
-		{
-			//We need to ask for a counter example
-			if(execlp(STP,STP,"--SMTLIB2", "-p", (char*) NULL)== -1)
-			{
-				cerr << "Failed to execute STP (" << STP << ")" << endl;
-				perror("execlp:");
-				exit(1);
-			}
-		}
+
 
 	}
 	else
 	{
 		//parent
-
-		int status=0;
 
 
 		//close read end of parent->child
@@ -408,24 +407,31 @@ void runSTP()
 			exit(1);
 		}
 
-		//Wait for child to complete
-		if(waitpid(pid,&status,0)==-1)
-		{
-			perror("waitpid:");
-			exit(1);
-		}
+		//now return. We'll wait for child once input parsing has finished
 
-		if(WIFEXITED(status) && WEXITSTATUS(status)==0)
-			return;
-		else
-		{
-			cerr << "STP did not return correctly!" << endl;
-			exitUnknown();
-		}
 	}
 }
 
+void waitForSTP()
+{
+	int status;
+	//Wait for child to complete
+	if(waitpid(pid,&status,0)==-1)
+	{
+		perror("waitpid:");
+		exit(1);
+	}
 
+	if(WIFEXITED(status) && WEXITSTATUS(status)==0)
+	{
+		return;
+	}
+	else
+	{
+		cerr << "STP did not return correctly!" << endl;
+		exitUnknown();
+	}
+}
 
 void exitUnknown()
 {
