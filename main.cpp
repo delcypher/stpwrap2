@@ -80,6 +80,8 @@ namespace SMTLIBOutput
 
 	void parseOutput();
 	bool hex2Dec(const std::string& input, int& value, int& bitWidth);
+
+	OutputToken finalAnswer=T_UNKNOWN; //dummy value
 }
 
 /* This is used to map array names to the Array objects in memory.
@@ -133,7 +135,9 @@ int main(int argc, char* argv[])
 
 	SMTLIBOutput::parseOutput();
 
-	printSMTLIBResponce();
+	//Only print array values if we got "sat".
+	if(SMTLIBOutput::finalAnswer==SMTLIBOutput::T_SAT)
+		printSMTLIBResponce();
 
 	//final cleanup
 	for(map<string,Array*>::iterator i=solutions.begin(); i!= solutions.end() ; ++i)
@@ -458,6 +462,7 @@ void SMTLIBOutput::parseOutput()
 			if(t==T_EOF)
 			{
 				cerr << "Error: STP did not respond with sat|unsat|unknown." << endl;
+				exit(1);
 			}
 		}
 
@@ -521,7 +526,12 @@ void SMTLIBOutput::parseOutput()
 			t=static_cast<OutputToken>(ollex());
 		}
 
+
+
 	}
+
+	//Last found token should be the answer to (check-sat)
+	finalAnswer=t; //It should be T_SAT | T_UNSAT | T_UNKNOWN
 
 	//clean up
 	if(foundString!=0) delete foundString;
