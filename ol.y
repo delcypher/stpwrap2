@@ -1,0 +1,44 @@
+%option prefix="ol"
+%{
+#include <string>
+#include "output-tokens.h"
+extern "C" int olwrap() { }
+
+namespace SMTLIBOutput
+{
+	std::string* foundString=0;
+}
+
+using namespace SMTLIBOutput;
+
+/* Macro for saving a C++ string and keeping memory tidy */
+#define SAVE_TOKEN if(foundString!=0) delete foundString; foundString = new std::string(yytext,yyleng);
+%}
+
+/* Array identifier regex */
+ARRAY_ID	[A-Za-z][A-Za-z0-9_.-]+
+HEXD		[a-fA-F0-9]
+
+/* (av) array value condition */
+%x av
+%%
+
+<*>[ \n\t] { /* ignore whitespace */}
+<INITIAL>^sat[\n]		{ECHO ; return T_SAT;}
+<INITIAL>^unsat[\n]		{ECHO ; return T_UNSAT;}
+<INITIAL>^unknown[\n]	{ECHO ; return T_UNKNOWN;}
+<INITIAL>^ASSERT		{BEGIN(av); return T_ASSERT;}
+
+<av>"("		{return T_LBRACKET;}
+<av>")"		{return T_RBRACKET;}
+<av>0x{HEXD}+	{SAVE_TOKEN; return T_HEX;}
+<av>{ARRAY_ID}	{ SAVE_TOKEN ;return T_ARRAYID;}
+<av>"["		{return T_LSQRBRACKET;}
+<av>"]"		{return T_RSQRTBRACKET;}
+<av>"="		{return T_EQUAL;}
+<av>";"		{ /* End of assert statement  */ BEGIN(INITIAL);}
+
+<*>. 		{/* invalid */ fprintf(stderr,"Invalid token: `%s`",yytext); yyterminate();}
+<<EOF>>		{ return T_EOF;}
+
+%%%
