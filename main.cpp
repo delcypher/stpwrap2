@@ -261,7 +261,8 @@ void parseArgs(int argc, char* argv[])
 	if(argc!=2)
 	{
 		cerr << "Usage:" << endl << argv[0] << " <input>" << endl << endl <<
-				"<input> is a SMTLIBv2 file";
+				"<input> is a SMTLIBv2 file." << endl;
+		exit(1);
 	}
 
 	//try to open the file.
