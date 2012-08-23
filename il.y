@@ -19,7 +19,7 @@ using namespace SMTLIBInput;
 ARRAY_ID	[A-Za-z][A-Za-z0-9_.-]*
 
 /* (gv) get-value condition, (bv) bitvector condition */
-%x gv bv
+%x gv bv comment
 %%
 
 <INITIAL>^"("set-option[ ]+:[a-z_-]+[ ]+([a-z0-9]+)?[ ]*")"[\n]	{ /* remove set-option commands */ }
@@ -36,9 +36,13 @@ ARRAY_ID	[A-Za-z][A-Za-z0-9_.-]*
 <gv>"(exit)"	{ /* Pass through and end get-value parsing */ ECHO ; return T_EXIT;}
 <gv>{ARRAY_ID}	{ SAVE_TOKEN ;return T_ARRAYID;}
 <gv,bv>[0-9]+	{ SAVE_TOKEN; return T_DECIMAL;}
+<gv>^";"		{/* ignore comments */ BEGIN(comment);}
 <<EOF>>		{ return T_EOF;}
 
 <bv>"bv"	{return T_BV;}
 <bv>")"		{BEGIN(gv);}
+
+<comment>[\n]	{/* ignore new line and switch off comment mode */ BEGIN(gv);}
+<comment>.*		{/* ignore comment */}
 
 %%%
