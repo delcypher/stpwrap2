@@ -3,6 +3,9 @@ project(stpwrap2)
 
 set(EXEC_NAME ${CMAKE_PROJECT_NAME})
 
+# Set the possible values of build type for cmake-gui
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+
 find_package(FLEX)
 
 if(NOT FLEX_FOUND )
