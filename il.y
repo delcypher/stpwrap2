@@ -2,7 +2,6 @@
 %{
 #include <string>
 #include "input-tokens.h"
-extern "C" int ilwrap() { }
 
 namespace SMTLIBInput
 {
@@ -17,6 +16,9 @@ using namespace SMTLIBInput;
 
 /* Array identifier regex */
 ARRAY_ID	[A-Za-z][A-Za-z0-9_.-]*
+
+/* yywrap returns 1, so we only parse one file */
+%option noyywrap
 
 /* (gv) get-value condition, (bv) bitvector condition */
 %x gv bv comment
