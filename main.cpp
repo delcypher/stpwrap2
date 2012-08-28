@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <errno.h>
+#include <sys/select.h>
 
 
 extern int illex();
@@ -121,6 +122,8 @@ void waitForSTP();
 
 void exitUnknown();
 
+void cleanUpChildProcess();
+
 int main(int argc, char* argv[])
 {
 	parseArgs(argc,argv);
@@ -135,6 +138,7 @@ int main(int argc, char* argv[])
 
 	SMTLIBOutput::parseOutput();
 
+
 	//Only print array values if we got "sat".
 	if(SMTLIBOutput::finalAnswer==SMTLIBOutput::T_SAT)
 		printSMTLIBResponce();
@@ -144,6 +148,8 @@ int main(int argc, char* argv[])
 	{
 		delete i->second;
 	}
+
+	cleanUpChildProcess();
 
 	return 0;
 }
@@ -419,22 +425,24 @@ void runSTP()
 
 void waitForSTP()
 {
-	int status;
-	//Wait for child to complete
-	if(waitpid(pid,&status,0)==-1)
-	{
-		perror("waitpid:");
-		exit(1);
-	}
+	/* Wait on the read end of the child -> parent pipe.
+	 * This method of waiting for the child is more reliable than waitpid()
+	 * which can cause a hang (child blocks because it can no longer write to
+	 * the write end of the child -> parent pipe because the kernel's buffer
+	 * is full).
+	 */
+	fd_set read;
+	FD_ZERO(&read);
+	FD_SET(cpfd[0],&read);
 
-	if(WIFEXITED(status) && WEXITSTATUS(status)==0)
+	int readyFd = pselect(cpfd[0] +1, &read,NULL,NULL,NULL,NULL);
+
+	if(readyFd==1)
+		return; // The fd is now ready for reading.
+	else if(readyFd == -1)
 	{
+		perror("pselect:");
 		return;
-	}
-	else
-	{
-		cerr << "STP did not return correctly!" << endl;
-		exitUnknown();
 	}
 }
 
@@ -550,4 +558,25 @@ bool SMTLIBOutput::hex2Dec(const std::string& input, int& value, int& bitWidth)
 		return false;
 	else
 		return true;
+}
+
+void cleanUpChildProcess()
+{
+		int status;
+		//Wait for child to complete
+		if(waitpid(pid,&status,0)==-1)
+		{
+			perror("waitpid:");
+			exit(1);
+		}
+
+		if(WIFEXITED(status) && WEXITSTATUS(status)==0)
+		{
+			return;
+		}
+		else
+		{
+			cerr << "STP did not return correctly!" << endl;
+			exitUnknown();
+		}
 }
