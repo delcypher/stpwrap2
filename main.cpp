@@ -269,7 +269,8 @@ void parseArgs(int argc, char* argv[])
 	if(argc!=2)
 	{
 		cerr << "Usage:" << endl << argv[0] << " <input>" << endl << endl <<
-				"<input> is a SMTLIBv2 file." << endl;
+				"<input> is a SMTLIBv2 file." << endl << endl <<
+			"This is a wrapper for the executable \"" << STP << "\" in your shell's PATH." << endl;
 		exit(1);
 	}
 
