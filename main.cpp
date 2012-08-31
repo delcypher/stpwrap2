@@ -111,7 +111,7 @@ int cpfd[2];
 void parseArgs(int argc, char* argv[]);
 void setupPipes();
 
-pid_t pid;
+pid_t pid=0;
 
 
 void printSMTLIBResponce();
@@ -340,7 +340,7 @@ void runSTP()
 	{
 		cerr << "Fork failed!" << endl;
 		perror("fork:");
-		exit(1);
+		exitUnknown();
 	}
 
 	if(pid == 0)
@@ -408,14 +408,14 @@ void runSTP()
 		if(close(pcfd[0]) == -1)
 		{
 			perror("close (parent):");
-			exit(1);
+			exitUnknown();
 		}
 
 		//close write end of child->parent
 		if(close(cpfd[1])== -1)
 		{
 			perror("close (parent):");
-			exit(1);
+			exitUnknown();
 		}
 
 		//now return. We'll wait for child once input parsing has finished
@@ -450,6 +450,12 @@ void exitUnknown()
 {
 	//SMTLIBv2 response to give when something goes wrong.
 	cout << "unknown" << endl;
+
+	//Kill the child.
+	if(pid!=0)
+	{
+		kill(pid,SIGKILL);
+	}
 	exit(1);
 }
 
@@ -471,7 +477,7 @@ void SMTLIBOutput::parseOutput()
 			if(t==T_EOF)
 			{
 				cerr << "Error: STP did not respond with sat|unsat|unknown." << endl;
-				exit(1);
+				exitUnknown();
 			}
 		}
 
@@ -567,7 +573,7 @@ void cleanUpChildProcess()
 		if(waitpid(pid,&status,0)==-1)
 		{
 			perror("waitpid:");
-			exit(1);
+			exitUnknown();
 		}
 
 		if(WIFEXITED(status) && WEXITSTATUS(status)==0)
