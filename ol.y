@@ -11,6 +11,9 @@ namespace SMTLIBOutput
 
 using namespace SMTLIBOutput;
 
+//Function to use if something goes wrong during lexing
+extern void exitUnknown();
+
 /* Macro for saving a C++ string and keeping memory tidy */
 #define SAVE_TOKEN if(foundString!=0) delete foundString; foundString = new std::string(yytext,yyleng);
 %}
@@ -41,7 +44,7 @@ HEXD		[a-fA-F0-9]
 <av>"="		{return T_EQUAL;}
 <av>";"		{ /* End of assert statement  */ BEGIN(INITIAL);}
 
-<*>. 		{/* invalid */ fprintf(stderr,"Invalid token: `%s`",yytext); yyterminate();}
+<*>. 		{/* invalid */ fprintf(stderr,"Invalid token: `%s`\n",yytext); exitUnknown();}
 <<EOF>>		{ return T_EOF;}
 
 %%%
