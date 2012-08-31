@@ -1,8 +1,8 @@
 %option prefix="ol"
+
 %{
 #include <string>
 #include "output-tokens.h"
-extern "C" int olwrap() { }
 
 namespace SMTLIBOutput
 {
@@ -14,6 +14,9 @@ using namespace SMTLIBOutput;
 /* Macro for saving a C++ string and keeping memory tidy */
 #define SAVE_TOKEN if(foundString!=0) delete foundString; foundString = new std::string(yytext,yyleng);
 %}
+
+/* yywrap returns 1, so we only parse one file */
+%option noyywrap
 
 /* Array identifier regex */
 ARRAY_ID	[A-Za-z][A-Za-z0-9_.-]*
